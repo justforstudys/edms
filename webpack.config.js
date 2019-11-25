@@ -1,5 +1,6 @@
 const path = require('path');
 let HtmlWebpackPlugin = require('html-webpack-plugin');
+let webpack = require('webpack');
 let ExtractTextWebpackPlugin = require('extract-text-webpack-plugin');
 let { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
@@ -87,7 +88,9 @@ module.exports = {
             hash: true, // 会在打包好的bundle.js后面加上hash串
         }),
         // 拆分后会把css文件放到dist目录下的css/style.css
-        new ExtractTextWebpackPlugin('css/style.css')  
+        new ExtractTextWebpackPlugin('css/style.css'),
+        // 热更新，热更新不是刷新
+        new webpack.HotModuleReplacementPlugin()  
     ],             // 对应的插件
     resolve: {
         // 别名
@@ -107,5 +110,6 @@ module.exports = {
         overlay: true, // 浏览器页面上显示错误
         historyApiFallback: true
     },
+    devtool: 'inline-source-map',
     mode: 'development'      // 模式配置
 }
