@@ -1,14 +1,22 @@
 import React, { Component } from 'react';
+import { Route, Switch, Redirect} from 'react-router-dom';
 
-import { Button } from 'antd'
+import { adminRouter } from './routes'
+
+
 
 
 export default class App extends Component {
   render () {
     return (
-      <div>
-        <Button type="primary">Primary</Button>
-      </div>
+      <Switch>
+        {
+          adminRouter.map(route => {
+            return <Route key={route.pathname} path={route.pathname} component={route.component}></Route>
+          })
+        }
+        <Redirect to={adminRouter[0].pathname} from="/console" exact></Redirect>
+      </Switch>
     )
   }
 }
