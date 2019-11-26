@@ -18,7 +18,21 @@ module.exports = {
                     // 将css用link的方式引入就不再需要style-loader了
                     fallback: "style-loader",
                     use: ['css-loader', 'postcss-loader']
-                })
+                }),
+                exclude: /node_modules/,
+            },
+            {//antd样式处理
+                test:/\.css$/,
+                exclude:/src/,
+                use:[
+                    { loader: "style-loader",},
+                    {
+                        loader: "css-loader",
+                        options:{
+                            importLoaders:1
+                        }
+                    }
+                ]
             },
             {
                 test: /\.less$/,
@@ -49,10 +63,19 @@ module.exports = {
                 use: 'file-loader'
             },
             {
-                test:/\.js$/,
-                use: 'babel-loader',
+                test:/\.(js|jsx)$/,
+                loader: 'babel-loader',
                 include: /src/,          // 只转化src目录下的js
-                exclude: /node_modules/  // 排除掉node_modules，优化打包速度
+                exclude: /node_modules/,  // 排除掉node_modules，优化打包速度
+                query: {
+                    presets:["env", "react"],
+                    plugins: [
+                        [
+                            "import",
+                            {libraryName: "antd", style: 'css'}
+                        ] //antd按需加载
+                    ]
+                },
             }  
         ]
     },              // 处理对应模块
