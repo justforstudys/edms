@@ -1,138 +1,178 @@
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
+const autoprefixer = require('autoprefixer');
 const path = require('path');
-let HtmlWebpackPlugin = require('html-webpack-plugin');
-let webpack = require('webpack');
-let ExtractTextWebpackPlugin = require('extract-text-webpack-plugin');
-let { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const pkg = require('./package.json');
+const buildConfig = require('./buildConfig');
+
+const ENV = process.env.NODE_ENV || 'development';
+const BUILD_DOMAIN = process.env.BUILD_DOMAIN || 'localhost';
+const ASSET_PATH = process.env.ASSET_PATH || '/';
+const VERSION = `v${pkg.version}`;
+const IS_PROD = ENV === 'production';
+
+const SOURCE_DIR = path.resolve(__dirname, 'src');
+const OUTPUT_DIR = path.resolve(__dirname, 'build');
+const CLIENT_DIR = path.join(OUTPUT_DIR, VERSION);
+
+const config = buildConfig[BUILD_DOMAIN];
+// const overrideBrowserslist = require('./src/i18n/locale.json');
 
 module.exports = {
-    entry: './src/index.js',               // 入口文件
-    output: {
-        filename: 'bundle.js',
-        path: path.resolve('dist')
-    },              // 出口文件
-    module: {
-        rules: [
-            {
-                test: /\.css$/,     // 解析css
-                use: ExtractTextWebpackPlugin.extract({
-                    // 将css用link的方式引入就不再需要style-loader了
-                    fallback: "style-loader",
-                    use: ['css-loader', 'postcss-loader']
-                }),
-                exclude: /node_modules/,
-            },
-            {//antd样式处理
-                test:/\.css$/,
-                exclude:/src/,
-                use:[
-                    { loader: "style-loader",},
-                    {
-                        loader: "css-loader",
-                        options:{
-                            importLoaders:1
-                        }
-                    }
-                ]
-            },
-            {
-                test: /\.less$/,
-                use: ExtractTextWebpackPlugin.extract({
-                    // 将css用link的方式引入就不再需要style-loader了
-                    fallback: "style-loader",
-                    use: ['css-loader', 'postcss-loader', 'less-loader'] // 从右向左解析
-                })
-            },
-            {
-                test: /\.(jpe?g|png|gif)$/,
-                use: [
-                    {
-                        loader: 'url-loader',
-                        options: {
-                            limit: 8192,    // 小于8k的图片自动转成base64格式，并且不会存在实体图片
-                            outputPath: 'images/'   // 图片打包后存放的目录
-                        }
-                    }
-                ]
-            },
-            {
-                test: /\.(htm|html)$/,
-                use: 'html-withimg-loader'
-            },
-            {
-                test: /\.(eot|ttf|woff|svg)$/,
-                use: 'file-loader'
-            },
-            {
-                test:/\.(js|jsx)$/,
-                loader: 'babel-loader',
-                include: /src/,          // 只转化src目录下的js
-                exclude: /node_modules/,  // 排除掉node_modules，优化打包速度
-                query: {
-                    presets:["env", "react"],
-                    plugins: [
-                        [
-                            "import",
-                            {libraryName: "antd", style: 'css'}
-                        ] //antd按需加载
-                    ]
-                },
-            }  
-        ]
-    },              // 处理对应模块
-    optimization: {
-        splitChunks: {
-            chunks: 'all',
-            cacheGroups: {
-                vendor: {   // 抽离第三方插件
-                    test: /node_modules/,   // 指定是node_modules下的第三方包
-                    chunks: 'initial',
-                    name: 'vendor',  // 打包后的文件名，任意命名    
-                    // 设置优先级，防止和自定义的公共代码提取时被覆盖，不进行打包
-                    priority: 10
-                },
-                utils: {
-                    // 抽离自己写的公共代码，utils里面是一个公共类库
-                    chunks: 'initial',
-                    name: 'utils',  //  任意命名
-                    minSize: 0    // 只要超出0字节就生成一个新包
-                }
-            }
-        }
-    },
-    plugins: [
-        // 打包前先清空
-        new CleanWebpackPlugin(),
-        // 通过new一下这个类来使用插件
-        new HtmlWebpackPlugin({
-            // 用哪个html作为模板
-            // 在src目录下创建一个index.html页面当做模板来用
-            template: './src/index.html',
-            // chunks: ['vendor', 'index', 'utils'],  //  引入需要的chunk
-            hash: true, // 会在打包好的bundle.js后面加上hash串
-        }),
-        // 拆分后会把css文件放到dist目录下的css/style.css
-        new ExtractTextWebpackPlugin('css/style.css'),
-        // 热更新，热更新不是刷新
-        new webpack.HotModuleReplacementPlugin()  
-    ],             // 对应的插件
-    resolve: {
-        // 别名
-        alias: {
-          pages:path.join(__dirname,'src/pages'),
-          component:path.join(__dirname,'src/component'),
-          actions:path.join(__dirname,'src/redux/actions'),
-          reducers:path.join(__dirname,'src/redux/reducers'),
+  mode: ENV,
+  target: 'web',
+  context: SOURCE_DIR,
+  entry: {
+    client: './index.js',
+  },
+  output: {
+    path: CLIENT_DIR,
+    publicPath: ASSET_PATH,
+    filename: 'assets/[name].[hash:8].js',
+    libraryTarget: 'umd',
+  },
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
         },
-        // 省略后缀
-        extensions: ['.js', '.jsx', '.json', '.css', '.scss', '.less']
+      },
     },
-    devServer: {
-        port: 3000,             // 端口
-        open: true,             // 自动打开浏览器
-        hot: true,               // 开启热更新
-        overlay: true, // 浏览器页面上显示错误
-        historyApiFallback: true
-    },
-    devtool: 'inline-source-map',
-    mode: 'development'      // 模式配置
-}
+  },
+  resolve: {
+    extensions: ['.js', '.jsx', '.json'],
+  },
+  module: {
+    rules: [{
+      test: /\.(jsx|js)$/,
+      exclude: /node_modules/,
+      use: {
+        loader: 'babel-loader',
+      },
+    }, {
+      test: /\.scss$/,
+      exclude: /node_modules/,
+      use: IS_PROD ? [
+        MiniCssExtractPlugin.loader,
+        {
+          loader: 'css-loader',
+          options: { minimize: true },
+        },
+        {
+          loader: 'postcss-loader',
+          options: {
+            plugins: () => [autoprefixer({ overrideBrowserslist: 'last 5 versions' })],
+            sourceMap: true,
+          },
+        },
+        {
+          loader: 'sass-loader',
+          options: {
+            includePaths: [
+              SOURCE_DIR,
+            ],
+          },
+        },
+      ] : [
+        {
+          loader: 'style-loader',
+          options: { singleton: true },
+        },
+        'css-loader',
+        {
+          loader: 'postcss-loader',
+          options: {
+            plugins: () => [autoprefixer({ overrideBrowserslist: 'last 5 versions' })],
+            sourceMap: true,
+          },
+        },
+        {
+          loader: 'sass-loader',
+          options: {
+            includePaths: [
+              SOURCE_DIR,
+            ],
+          },
+        },
+      ],
+    }, {
+      test: /\.less$/,
+      include: /node_modules/,
+      use: [
+        MiniCssExtractPlugin.loader,
+        'css-loader',
+        {
+          loader: 'postcss-loader',
+          options: {
+            plugins: () => [autoprefixer({ overrideBrowserslist: 'last 5 versions' })],
+            sourceMap: true,
+          },
+        },
+        {
+          loader: 'less-loader',
+          options: {
+            javascriptEnabled: true,
+          },
+        },
+      ],
+    }, {
+      test: /\.css$/,
+      include: /node_modules/,
+      use: [
+        MiniCssExtractPlugin.loader,
+        'css-loader',
+        {
+          loader: 'postcss-loader',
+          options: {
+            plugins: () => [autoprefixer({ overrideBrowserslist: 'last 5 versions' })],
+            sourceMap: true,
+          },
+        },
+      ],
+    }, {
+      test: /\.(svg|woff2?|ttf|eot|jpe?g|png|gif)(\?.*)?$/i,
+      use: IS_PROD ? {
+        loader: 'file-loader',
+        options: {
+          name: '[name].[hash:8].[ext]',
+          outputPath: 'assets/images/',
+        },
+      } : {
+        loader: 'url-loader',
+      },
+    }],
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(ENV),
+      'process.env.ASSET_PATH': JSON.stringify(ASSET_PATH),
+      'process.env.BUILD_CONFIG': JSON.stringify(config),
+      // 'process.env.BUILD_LOCALE_MESSAGES': JSON.stringify(overrideBrowserslist),
+    }),
+    new MiniCssExtractPlugin({
+      filename: 'assets/css/style.[hash:8].css',
+      chunkFilename: 'assets/css/[id].[hash:8].css',
+    }),
+    new CopyWebpackPlugin([
+      { from: 'favicon.ico' },
+    ]),
+    new HtmlWebpackPlugin({
+      title: 'React App Pro',
+      filename: './index.html',
+      template: './index.ejs',
+    }),
+  ],
+  devtool: IS_PROD ? 'source-map' : 'eval-source-map',
+  devServer: {
+    port: process.env.PORT || 8080,
+    host: 'localhost',
+    publicPath: '/',
+    contentBase: SOURCE_DIR,
+    historyApiFallback: true,
+  },
+};

@@ -16,6 +16,7 @@ export default class App extends Component {
           })
         }
         <Redirect to={adminRouter[0].pathname} from="/console" exact></Redirect>
+        <Redirect to="/404"></Redirect>
       </Switch>
     )
   }
