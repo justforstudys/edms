@@ -14,10 +14,16 @@ export const minRouter = [
 export const adminRouter = [
   {
     pathname: '/console/dashboard',
-    component: Dashboard
+    component: Dashboard,
+    isNav: true,
+    icon: 'user',
+    title: '桌面池'
   },
   {
     pathname: '/console/yearmanage',
-    component: YearManage
+    component: YearManage,
+    isNav: true,
+    icon: 'video-camera',
+    title: '学年管理'
   }
 ]

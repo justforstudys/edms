@@ -1,34 +1,35 @@
-import React, {} from 'react';
+import React, { Component } from 'react';
 import { Layout, Menu, Icon } from 'antd';
-
+import { withRouter } from 'react-router-dom'
 const { Header, Sider, Content } = Layout;
 
-export default class Frame extends Component {
-
+class Frame extends Component {
+  selectedMenu = ({key}) => {
+    this.props.history.push(key);
+  }
   render() {
     return (
-      <Layout>
+      <Layout style={{minHeight: '100%'}}>
         <Sider>
           <div className="logo" />
-          <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']}>
-            <Menu.Item key="1">
-              <Icon type="user" />
-              <span>nav 1</span>
-            </Menu.Item>
-            <Menu.Item key="2">
-              <Icon type="video-camera" />
-              <span>nav 2</span>
-            </Menu.Item>
-            <Menu.Item key="3">
-              <Icon type="upload" />
-              <span>nav 3</span>
-            </Menu.Item>
+          <Menu theme="dark" mode="inline" selectedKeys={[this.props.location.pathname]} onClick={this.selectedMenu}>
+            {
+              this.props.menus.map(item => {
+                return (
+                  <Menu.Item key={item.pathname}>
+                    <Icon type={item.icon} />
+                    <span>{item.title}</span>
+                  </Menu.Item>
+                )
+              })
+            }
           </Menu>
         </Sider>
         <Layout>
           <Header style={{ background: '#fff', padding: 0 }}>
             <Icon
               className="trigger"
+              type="user"
             />
           </Header>
           <Content
@@ -39,10 +40,13 @@ export default class Frame extends Component {
               minHeight: 280,
             }}
           >
-            Content
+            {this.props.children}
           </Content>
         </Layout>
       </Layout>
     );
   }
 }
+
+
+export default withRouter(Frame);
