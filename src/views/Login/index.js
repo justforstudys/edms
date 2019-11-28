@@ -2,14 +2,21 @@ import React , { Component } from 'react';
 
 import { Form, Icon, Input, Button, Checkbox } from 'antd';
 import './index.scss'
-
+import userApi from '../../api/user/index.js'
+import axios from 'axios';
 class Login extends Component {
 
   handleSubmit = e => {
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
       if (!err) {
-        console.log('Received values of form: ', values);
+        // console.log('Received values of form: ', values);
+        let { username, password } = values;
+        userApi.userLogin({username, password}).then(response => {
+          console.log(response)
+        }).catch(error => {
+          console.error(error);
+        })
       }
     });
   };

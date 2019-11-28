@@ -21,3 +21,7 @@ $ yarn dev            # start webpack-dev-server in another terminal window at h
 ## Login Credentials
 * Admin: username `admin` & password `123`, authorities is `'admin'`
 * User: username `user` & password `123`, authorities is `'user'`
+
+
+## API
+登录： post  /api/userLogin  参数类型body{username, password}
