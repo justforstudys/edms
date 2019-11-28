@@ -3,25 +3,36 @@ import React , { Component } from 'react';
 import { Form, Icon, Input, Button, Checkbox } from 'antd';
 import './index.scss'
 import userApi from '../../api/user/index.js'
-import axios from 'axios';
+import { connect } from 'react-redux'
+import { LoginToToken } from '../../actions/user'
+
+const mapState = (state) => {
+  return {
+    token: state.userInfo.token
+  }
+}
+
+
 class Login extends Component {
 
   handleSubmit = e => {
     e.preventDefault();
-    this.props.form.validateFields((err, values) => {
-      if (!err) {
-        // console.log('Received values of form: ', values);
-        let { username, password } = values;
-        userApi.userLogin({username, password}).then(response => {
-          console.log(response)
-        }).catch(error => {
-          console.error(error);
-        })
-      }
-    });
+    LoginToToken('123');
+    // this.props.form.validateFields((err, values) => {
+    //   if (!err) {
+    //     // console.log('Received values of form: ', values);
+    //     let { username, password } = values;
+    //     userApi.userLogin({username, password}).then(response => {
+    //       console.log(response)
+    //     }).catch(error => {
+    //       console.error(error);
+    //     })
+    //   }
+    // });
   };
 
   render() {
+    console.log(this.props);
     const { getFieldDecorator } = this.props.form;
     return (
       <div className="login-wrapper">
@@ -68,4 +79,6 @@ class Login extends Component {
 
 const WrappedNormalLoginForm = Form.create({ name: 'normal_login' })(Login);
 
-export default WrappedNormalLoginForm;
+const LoginWrapper = connect(mapState, {LoginToToken})(WrappedNormalLoginForm);
+
+export default LoginWrapper;
