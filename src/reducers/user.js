@@ -5,14 +5,10 @@ const initState = {
 }
 
 export default (state = initState, action) => {
-  console.log(1231231231);
-  console.log(action)
+  console.log('action', action);
   switch (action.type) {
     case actionTypes.LOGIN_TO_TOKEN:
-      return {
-        ...state,
-        token: 'newtoken'
-      }
+      return Object.assign({}, state, {token: action.payload.token});
     default:
       return state;
   }

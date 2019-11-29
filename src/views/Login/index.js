@@ -2,22 +2,23 @@ import React , { Component } from 'react';
 
 import { Form, Icon, Input, Button, Checkbox } from 'antd';
 import './index.scss'
-import userApi from '../../api/user/index.js'
 import { connect } from 'react-redux'
 import { LoginToToken } from '../../actions/user'
 
-const mapState = (state) => {
-  return {
-    token: state.userInfo.token
-  }
-}
+
 
 
 class Login extends Component {
 
   handleSubmit = e => {
     e.preventDefault();
-    LoginToToken('123');
+    let { LoginUser } = this.props;
+    this.props.form.validateFields((err, values) => {
+      if (!err) {
+        let { username, password} = values;
+        LoginUser({username, password});
+      }
+    })
     // this.props.form.validateFields((err, values) => {
     //   if (!err) {
     //     // console.log('Received values of form: ', values);
@@ -77,8 +78,18 @@ class Login extends Component {
   }
 }
 
+const mapStateToProps = (state) => {
+  return {
+    token: state.userInfo.token
+  }
+}
+
+const mapDispatchToProps = {
+  LoginUser: LoginToToken,
+};
+
 const WrappedNormalLoginForm = Form.create({ name: 'normal_login' })(Login);
 
-const LoginWrapper = connect(mapState, {LoginToToken})(WrappedNormalLoginForm);
+const LoginWrapper = connect(mapStateToProps, mapDispatchToProps)(WrappedNormalLoginForm);
 
 export default LoginWrapper;
